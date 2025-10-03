@@ -1,6 +1,9 @@
 package normalizer
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func Test_collapseDots(t *testing.T) {
 	tests := []struct {
@@ -259,6 +262,57 @@ func Test_normalizeLabelsKeepPunycode(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := normalizeLabelsKeepPunycode(tt.in); got != tt.want {
 				t.Errorf("normalizeLabelsKeepPunycode() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_validateASCII(t *testing.T) {
+	makeDomain := func(labels ...string) string { return strings.Join(labels, ".") }
+
+	l63a := strings.Repeat("a", 63)
+	l63b := strings.Repeat("b", 63)
+	l63c := strings.Repeat("c", 63)
+	l61d := strings.Repeat("d", 61)
+	l62d := strings.Repeat("d", 62)
+	dom253 := makeDomain(l63a, l63b, l63c, l61d)
+	dom254 := makeDomain(l63a, l63b, l63c, l62d)
+
+	label64 := strings.Repeat("x", 64)
+
+	tests := []struct {
+		name    string
+		ascii   string
+		wantErr bool
+	}{
+		{"empty", "", true},
+		{"single label ok", "localhost", false},
+		{"simple domain ok", "example.com", false},
+		{"hyphens inside ok", "foo-bar.baz-qux", false},
+		{"starts with hyphen", "-abc.com", true},
+		{"ends with hyphen", "abc-.com", true},
+		{"double dot (empty label)", "a..b", true},
+		{"trailing dot (empty last label)", "example.com.", true},
+		{"leading dot (empty first label)", ".example.com", true},
+		{"label length = 63 ok", makeDomain(l63a, "com"), false},
+		{"label length > 63", makeDomain(label64, "com"), true},
+		{"domain length = 253 ok", dom253, false},
+		{"domain length > 253", dom254, true},
+		{"punycode label ok", "xn--d1acufc.xn--p1ai", false},
+		{"numeric label ok", "123.456", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var parts []string
+			if tt.ascii != "" {
+				parts = strings.Split(tt.ascii, ".")
+			} else {
+				parts = nil
+			}
+			err := validateASCII(tt.ascii, parts)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("validateASCII(%q) err=%v, wantErr=%v", tt.ascii, err, tt.wantErr)
 			}
 		})
 	}

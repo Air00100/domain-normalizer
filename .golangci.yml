@@ -59,6 +59,7 @@ linters:
       - third_party$
       - builtin$
       - examples$
+      - _test\.go
 formatters:
   enable:
     - gofmt
