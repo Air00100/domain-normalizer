@@ -1,0 +1,78 @@
+version: "2"
+run:
+  tests: true
+linters:
+  enable:
+    - goconst
+    - gocyclo
+    - gosec
+    - nolintlint
+    - govet
+    - errcheck
+    - errname
+    - ineffassign
+    - unused
+    - staticcheck
+    - cyclop
+    - copyloopvar
+    - asasalint
+    - bidichk
+    - exhaustive
+    - gocognit
+    - gocritic
+    - iface
+    - lll
+    - whitespace
+    - forcetypeassert
+    - makezero
+    - dogsled
+    - tparallel
+    - decorder
+    - gosmopolitan
+  disable:
+    - err113
+  settings:
+    dupl:
+      threshold: 100
+    gocognit:
+      min-complexity: 20
+    goconst:
+      min-len: 3
+      min-occurrences: 2
+    gocyclo:
+      min-complexity: 15
+    cyclop:
+      max-complexity: 15
+    gocritic:
+      disabled-checks:
+        - exitAfterDefer
+      enabled-checks:
+        - rangeValCopy
+    dogsled:
+      max-blank-identifiers: 2
+  exclusions:
+    generated: lax
+    rules:
+      - path: (.+)\.go$
+        text: error return value not checked
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - goimports
+    - golines
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+  settings:
+    goimports:
+      local-prefixes:
+        - normalizer
+    golines:
+      max-len: 120
